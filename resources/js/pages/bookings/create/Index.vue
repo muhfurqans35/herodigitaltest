@@ -4,6 +4,7 @@ import { useForm } from "@inertiajs/vue3";
 import { DatePicker } from "v-calendar";
 import "v-calendar/dist/style.css";
 import Navbar from '@/components/Navbar.vue';
+import { useTitle } from '@vueuse/core';
 
 interface BookingForm {
   date: string | null;
@@ -11,6 +12,7 @@ interface BookingForm {
   session: number;
   [key: string]: any;
 }
+
 
 const form = useForm<BookingForm>({
   date: null,

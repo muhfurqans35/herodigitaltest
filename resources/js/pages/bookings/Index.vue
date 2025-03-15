@@ -2,6 +2,7 @@
 import { Link, router } from '@inertiajs/vue3';
 import Navbar from '@/components/Navbar.vue';
 import axios from 'axios';
+import { useTitle } from '@vueuse/core';
 
 interface Booking {
   id: number;
