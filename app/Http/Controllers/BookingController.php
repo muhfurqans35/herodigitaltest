@@ -13,17 +13,11 @@ class BookingController extends Controller
 {
     public function __construct()
     {
-        // Pastikan serverKey sesuai dengan yang ada di dashboard Midtrans
+
         Config::$serverKey = env('MIDTRANS_SERVER_KEY');
 
-        // Atur environment (false untuk sandbox, true untuk production)
-        Config::$isProduction = false; // Ubah ke true untuk lingkungan produksi
+        Config::$isProduction = false;
 
-        // Nonaktifkan verifikasi SSL (hanya untuk pengembangan)
-        Config::$curlOptions = [
-            CURLOPT_SSL_VERIFYHOST => 0,
-            CURLOPT_SSL_VERIFYPEER => false,
-        ];
     }
     public function store(Request $request)
     {
@@ -60,7 +54,6 @@ class BookingController extends Controller
     {
         $booking = Booking::findOrFail($id);
 
-        // Pastikan booking masih pending
         if ($booking->status !== 'pending') {
             return back()->with('error', 'Booking ini sudah diproses atau dibatalkan.');
         }
@@ -73,12 +66,10 @@ class BookingController extends Controller
                 ],
             ];
 
-            // Dapatkan snap token dari Midtrans
             $snapToken = Snap::getSnapToken($transactionDetails);
 
             \Log::info('Midtrans Response:', ['snap_token' => $snapToken]);
 
-            // Render halaman pembayaran dengan Inertia
             return Inertia::render('BookingPayment', [
                 'snap_token' => $snapToken,
                 'booking' => $booking,
@@ -108,7 +99,6 @@ class BookingController extends Controller
     {
         $booking = Booking::findOrFail($id);
 
-        // Hanya izinkan penghapusan jika statusnya masih pending
         if ($booking->status !== 'pending') {
             return back()->with('error', 'Booking tidak dapat dihapus karena statusnya sudah diproses.');
         }

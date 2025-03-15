@@ -6,7 +6,6 @@ const page = usePage();
 const isAuthenticated = computed(() => page.props.auth);
 </script>
 <template>
-        <!-- Navbar -->
   <nav class="bg-black border-b border-red-700 p-4 shadow-md flex justify-between items-center">
     <h1 class="text-2xl font-bold text-red-600">
   <Link href="/">RENTAL PS</Link>

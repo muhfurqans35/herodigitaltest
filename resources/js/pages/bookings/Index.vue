@@ -75,7 +75,6 @@ const deleteBooking = (id: number) => {
               </span>
             </td>
             <td class="p-4 flex space-x-2">
-              <!-- Tombol Bayar (hanya untuk status pending) -->
               <Link
                 v-if="booking.status === 'pending'"
                 :href="`/booking/payment/${booking.id}`"
@@ -83,7 +82,6 @@ const deleteBooking = (id: number) => {
               >
                 Bayar
               </Link>
-              <!-- Tombol Hapus (hanya untuk status pending) -->
               <button
                 v-if="booking.status === 'pending'"
                 @click="deleteBooking(booking.id)"

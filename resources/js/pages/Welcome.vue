@@ -9,7 +9,6 @@ import Navbar from '@/components/Navbar.vue';
   
     <Navbar/>
 
-    <!-- Hero Section -->
     <section class="text-center py-20 bg-gradient-to-b from-black to-gray-900">
       <h2 class="text-5xl font-extrabold mb-4 text-white">
         Mainkan Game Favoritmu <span class="text-red-600">dengan Mudah</span>
@@ -36,7 +35,6 @@ import Navbar from '@/components/Navbar.vue';
       </div>
     </section>
 
-    <!-- Footer -->
     <footer class="text-center py-6 bg-black border-t border-red-700 text-gray-400">
       <p>&copy; 2025 Sewa PS4 & PS5 | All Rights Reserved</p>
     </footer>
