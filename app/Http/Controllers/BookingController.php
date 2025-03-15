@@ -55,10 +55,18 @@ class BookingController extends Controller
         $booking = Booking::findOrFail($id);
 
         if ($booking->status !== 'pending') {
-            return back()->with('error', 'Booking ini sudah diproses atau dibatalkan.');
+            return response()->json(['error' => 'Booking ini sudah diproses atau dibatalkan.'], 400);
         }
 
         try {
+            // Periksa apakah snap_token masih valid
+            if ($booking->snap_token && $booking->snap_token_expires_at > now()) {
+                return response()->json([
+                    'snap_token' => $booking->snap_token,
+                ]);
+            }
+
+            // Buat snap_token baru jika tidak ada atau sudah kedaluwarsa
             $transactionDetails = [
                 'transaction_details' => [
                     'order_id' => $booking->id,
@@ -66,12 +74,16 @@ class BookingController extends Controller
                 ],
             ];
 
-            // Dapatkan snap_token dari Midtrans
             $snapToken = Snap::getSnapToken($transactionDetails);
+
+            // Simpan snap_token dan waktu kedaluwarsa (misalnya, 1 jam dari sekarang)
+            $booking->update([
+                'snap_token' => $snapToken,
+                'snap_token_expires_at' => now()->addHours(1),
+            ]);
 
             \Log::info('Midtrans Response:', ['snap_token' => $snapToken]);
 
-            // Kembalikan snap_token sebagai respons JSON
             return response()->json([
                 'snap_token' => $snapToken,
             ]);
@@ -79,7 +91,7 @@ class BookingController extends Controller
         } catch (\Exception $e) {
             \Log::error('Midtrans Error:', ['error' => $e->getMessage()]);
 
-            return back()->with('error', 'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.');
+            return response()->json(['error' => 'Terjadi kesalahan saat memproses pembayaran.'], 500);
         }
     }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
 import Navbar from '@/components/Navbar.vue';
-import axios from 'axios'; // Pastikan axios sudah diinstal dan diimpor
+import axios from 'axios';
 
 interface Booking {
   id: number;
@@ -29,11 +29,9 @@ const deleteBooking = (id: number) => {
 
 const proceedToPayment = async (bookingId: number) => {
   try {
-    // Panggil endpoint Laravel untuk mendapatkan snap_token
     const response = await axios.get<{ snap_token: string }>(`/booking/payment/${bookingId}`);
     const snapToken = response.data.snap_token;
 
-    // Redirect ke halaman pembayaran Midtrans
     window.location.href = `https://app.sandbox.midtrans.com/snap/v2/vtweb/${snapToken}`;
   } catch (error) {
     console.error('Error:', error);
