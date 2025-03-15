@@ -123,6 +123,9 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
-    'server_key' => env('MIDTRANS_SERVER_KEY', ''),
+    'midtrans' => [
+        'server_key' => env('MIDTRANS_SERVER_KEY', ''),
+    ]
+
 
 ];
