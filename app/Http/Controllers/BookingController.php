@@ -28,7 +28,7 @@ class BookingController extends Controller
         $surcharge = $isWeekend ? 50000 : 0;
         $totalPrice = ($basePrice * $request->session) + $surcharge;
 
-        $booking = Booking::create([
+        Booking::create([
             'user_id' => Auth::id(),
             'date' => $bookingDate,
             'service' => $request->service,

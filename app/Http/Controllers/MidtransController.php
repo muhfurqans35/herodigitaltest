@@ -14,6 +14,8 @@ class MidtransController extends Controller
     {
         Config::$serverKey = config('app.midtrans.server_key');
         Config::$isProduction = false;
+        Config::$isSanitized = true;
+        Config::$is3ds = true;
     }
     public function payment(Request $request, $id)
     {
@@ -24,29 +26,32 @@ class MidtransController extends Controller
         }
 
         try {
-            if ($booking->snap_token) {
+            if ($booking->snap_token && $booking->snap_token_expires_at > now()) {
                 return response()->json([
                     'snap_token' => $booking->snap_token,
                 ]);
-            } else {
-                $transactionDetails = [
-                    'transaction_details' => [
-                        'order_id' => $booking->id . '-' . time(),
-                        'gross_amount' => $booking->total_price,
-                    ],
-                ];
-                $snapToken = Snap::getSnapToken($transactionDetails);
-
-                $booking->update([
-                    'snap_token' => $snapToken,
-                    'snap_token_expires_at' => now()->addHours(12),
-                ]);
-
-                return response()->json([
-                    'snap_token' => $snapToken,
-                ]);
             }
+            $transactionDetails = [
+                'transaction_details' => [
+                    'order_id' => $booking->id . '-' . time(),
+                    'gross_amount' => $booking->total_price,
+                ],
+                'callbacks' => [
+                    'finish' => url('https://herodigitaltest-main-mk5che.laravel.cloud/callback'),
+                    'error' => url('https://herodigitaltest-main-mk5che.laravel.cloud/bookings'),
+                    'unfinish' => url('https://herodigitaltest-main-mk5che.laravel.cloud/bookings'),
+                ],
+            ];
+            $snapToken = Snap::getSnapToken($transactionDetails);
 
+            $booking->update([
+                'snap_token' => $snapToken,
+                'snap_token_expires_at' => now()->addHours(12),
+            ]);
+
+            return response()->json([
+                'snap_token' => $snapToken,
+            ]);
 
         } catch (\Exception $e) {
             return response()->json(['error' => 'Terjadi kesalahan saat memproses pembayaran.', 'message' => $e->getMessage()], 500);
@@ -57,7 +62,7 @@ class MidtransController extends Controller
     public function handleCallback(Request $request)
     {
         $transactionStatus = $request->transaction_status;
-        $orderId = $request->order_id;
+        $orderId = $request->id;
         $fraudStatus = $request->fraud_status;
 
         $booking = Booking::find($orderId);
