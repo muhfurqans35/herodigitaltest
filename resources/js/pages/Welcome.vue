@@ -1,33 +1,13 @@
-<script setup>
+<script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { computed } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import Navbar from '@/components/Navbar.vue';
 
-const page = usePage();
-const isAuthenticated = computed(() => page.props.auth?.user);
 </script>
 
 <template>
   <div class="min-h-screen bg-black text-white">
-    <!-- Navbar -->
-  <nav class="bg-black border-b border-red-700 p-4 shadow-md flex justify-between items-center">
-  <h1 class="text-2xl font-bold text-red-600">RENTAL PS</h1>
-  <div class="flex items-center">
-    <template v-if="isAuthenticated">
-      <Link href="/logout" method="post" as="button" class="px-4 py-2 bg-red-600 rounded-lg text-white font-semibold hover:bg-red-700 transition">
-        Logout
-      </Link>
-    </template>
-    <template v-else>
-      <Link href="/login" class="px-4 py-2 bg-red-600 rounded-lg text-white font-semibold hover:bg-red-700 transition">
-        Login
-      </Link>
-      <Link href="/register" class="ml-2 px-4 py-2 bg-white rounded-lg text-black font-semibold hover:bg-gray-200 transition">
-        Register
-      </Link>
-    </template>
-  </div>
-</nav>
+  
+    <Navbar/>
 
     <!-- Hero Section -->
     <section class="text-center py-20 bg-gradient-to-b from-black to-gray-900">

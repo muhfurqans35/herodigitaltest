@@ -1,12 +1,19 @@
-<script setup>
+<script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
+import Navbar from '@/components/Navbar.vue';
 
-const props = defineProps({
-  bookings: Array,
-});
+interface Booking {
+  id: number;
+  date: string;
+  service: string;
+  session: number;
+  total_price: number;
+  status: string;
+}
 
-// Fungsi untuk menghapus booking
-const deleteBooking = (id) => {
+defineProps<{ bookings: Booking[] }>();
+
+const deleteBooking = (id: number) => {
   if (confirm('Apakah Anda yakin ingin menghapus booking ini?')) {
     router.delete(`/bookings/${id}`, {
       onSuccess: () => {
@@ -19,8 +26,10 @@ const deleteBooking = (id) => {
   }
 };
 </script>
+
 <template>
-  <div class="p-6 max-w-3xl mx-auto bg-white rounded-xl shadow-md">
+  <Navbar />
+  <div class="p-6 max-w-3xl mx-auto bg-white rounded-xl shadow-md m-8">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold text-gray-800">Daftar Booking</h2>
       <Link
