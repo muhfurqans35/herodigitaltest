@@ -58,7 +58,7 @@ class MidtransController extends Controller
         $orderId = $request->order_id;
         $fraudStatus = $request->fraud_status;
 
-        $booking = Booking::find($orderId);
+        $booking = Booking::where('id', explode('-', $orderId)[0])->first();
 
         if (!$booking) {
             return response()->json(['status' => 'error', 'message' => 'Booking tidak ditemukan.'], 404);
