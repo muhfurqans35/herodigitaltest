@@ -55,7 +55,7 @@ class BookingController extends Controller
         $booking = Booking::findOrFail($id);
 
         if ($booking->status !== 'pending') {
-            return back()->with('error', 'Booking ini sudah diproses atau dibatalkan.');
+            return response()->json(['error' => 'Booking ini sudah diproses atau dibatalkan.'], 400);
         }
 
         try {
@@ -66,18 +66,12 @@ class BookingController extends Controller
                 ],
             ];
 
-            // Dapatkan snap_token dari Midtrans
             $snapToken = Snap::getSnapToken($transactionDetails);
 
-            \Log::info('Midtrans Response:', ['snap_token' => $snapToken]);
-
-            // Redirect ke halaman pembayaran Midtrans
-            return redirect()->away("https://app.sandbox.midtrans.com/snap/v2/vtweb/{$snapToken}");
+            return response()->json(['snap_token' => $snapToken]);
 
         } catch (\Exception $e) {
-            \Log::error('Midtrans Error:', ['error' => $e->getMessage()]);
-
-            return back()->with('error', 'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.');
+            return response()->json(['error' => 'Terjadi kesalahan saat memproses pembayaran.'], 500);
         }
     }
 

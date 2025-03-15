@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
 import Navbar from '@/components/Navbar.vue';
+import axios from 'axios'; // Pastikan axios sudah diinstal dan diimpor
 
 interface Booking {
   id: number;
@@ -23,6 +24,20 @@ const deleteBooking = (id: number) => {
         alert('Terjadi kesalahan saat menghapus booking: ' + JSON.stringify(errors));
       },
     });
+  }
+};
+
+const proceedToPayment = async (bookingId: number) => {
+  try {
+    // Panggil endpoint Laravel untuk mendapatkan snap_token
+    const response = await axios.get<{ snap_token: string }>(`/booking/payment/${bookingId}`);
+    const snapToken = response.data.snap_token;
+
+    // Redirect ke halaman pembayaran Midtrans
+    window.location.href = `https://app.sandbox.midtrans.com/snap/v2/vtweb/${snapToken}`;
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.');
   }
 };
 </script>
@@ -75,13 +90,13 @@ const deleteBooking = (id: number) => {
               </span>
             </td>
             <td class="p-4 flex space-x-2">
-              <Link
+              <button
                 v-if="booking.status === 'pending'"
-                :href="`/booking/payment/${booking.id}`"
+                @click="proceedToPayment(booking.id)"
                 class="bg-green-500 text-white px-3 py-1 rounded-lg hover:bg-green-600 transition duration-300"
               >
                 Bayar
-              </Link>
+              </button>
               <button
                 v-if="booking.status === 'pending'"
                 @click="deleteBooking(booking.id)"
