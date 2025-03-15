@@ -12,10 +12,8 @@ class MidtransController extends Controller
 
     public function __construct()
     {
-        Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+        Config::$serverKey = config('app.midtrans.server_key');
         Config::$isProduction = false;
-        Config::$isSanitized = true;
-        Config::$is3ds = true;
     }
     public function payment(Request $request, $id)
     {
@@ -33,7 +31,7 @@ class MidtransController extends Controller
             }
             $transactionDetails = [
                 'transaction_details' => [
-                    'order_id' => $booking->id,
+                    'order_id' => $booking->id . '-' . time(),
                     'gross_amount' => $booking->total_price,
                 ],
             ];
@@ -49,12 +47,7 @@ class MidtransController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Midtrans Error:', ['error' => $e->getMessage()]);
-            return response()->json([
-                'error' => 'Terjadi kesalahan saat memproses pembayaran.',
-                'message' => $e->getMessage(), // Menampilkan pesan error
-                'trace' => $e->getTrace(), // Menampilkan stack trace untuk debugging
-            ], 500);
+            return response()->json(['error' => 'Terjadi kesalahan saat memproses pembayaran.', 'message' => $e->getMessage()], 500);
         }
     }
 
