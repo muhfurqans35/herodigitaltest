@@ -39,7 +39,7 @@ class MidtransController extends Controller
 
             $booking->update([
                 'snap_token' => $snapToken,
-                'snap_token_expires_at' => now()->addHours(12),
+                'snap_token_expires_at' => now()->addHours(1),
             ]);
 
             return response()->json([
@@ -55,7 +55,7 @@ class MidtransController extends Controller
     public function handleCallback(Request $request)
     {
         $transactionStatus = $request->transaction_status;
-        $orderId = $request->id;
+        $orderId = $request->order_id;
         $fraudStatus = $request->fraud_status;
 
         $booking = Booking::find($orderId);
@@ -63,16 +63,19 @@ class MidtransController extends Controller
         if (!$booking) {
             return response()->json(['status' => 'error', 'message' => 'Booking tidak ditemukan.'], 404);
         }
-        if ($transactionStatus == 'capture' && $fraudStatus == 'accept') {
-            $booking->update(['status' => 'finished']);
+        if ($transactionStatus == 'capture') {
+            if ($fraudStatus == 'accept') {
+                $booking->update(['status' => 'finished']);
+            } elseif ($fraudStatus == 'challenge') {
+                $booking->update(['status' => 'pending']);
+            }
         } elseif ($transactionStatus == 'settlement') {
             $booking->update(['status' => 'finished']);
-        } elseif ($transactionStatus == 'cancel' || $transactionStatus == 'deny' || $transactionStatus == 'expire') {
+        } elseif (in_array($transactionStatus, ['cancel', 'deny', 'expire'])) {
             $booking->update(['status' => 'canceled']);
-        } else {
+        } elseif ($transactionStatus == 'pending') {
             $booking->update(['status' => 'pending']);
         }
-
         return response()->json(['status' => 'success']);
     }
 }

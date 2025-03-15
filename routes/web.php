@@ -26,7 +26,8 @@ Route::middleware(['auth'])->group(function () {
 
 });
 
-Route::post('/midtrans/callback', [MidtransController::class, 'handleCallback']);
+Route::post('/midtrans/callback', [MidtransController::class, 'handleCallback'])->middleware('api');
+;
 
 
 require __DIR__ . '/settings.php';
