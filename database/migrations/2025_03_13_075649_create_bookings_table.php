@@ -9,6 +9,7 @@ return new class extends Migration {
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('order_id')->unique()->nullable();
             $table->date('date');
             $table->string('service');
             $table->integer('session');
