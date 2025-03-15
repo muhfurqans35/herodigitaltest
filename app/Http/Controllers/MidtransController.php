@@ -14,6 +14,8 @@ class MidtransController extends Controller
     {
         Config::$serverKey = env('MIDTRANS_SERVER_KEY');
         Config::$isProduction = false;
+        Config::$isSanitized = true;
+        Config::$is3ds = true;
     }
     public function payment(Request $request, $id)
     {
@@ -47,6 +49,7 @@ class MidtransController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('Midtrans Error:', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Terjadi kesalahan saat memproses pembayaran.'], 500);
         }
     }
