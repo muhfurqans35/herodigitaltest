@@ -14,6 +14,8 @@ class MidtransController extends Controller
     {
         Config::$serverKey = config('midtrans.server_key');
         Config::$isProduction = false;
+        Config::$isSanitized = true;
+        Config::$is3ds = true;
     }
     public function payment(Request $request, $id)
     {
@@ -24,38 +26,29 @@ class MidtransController extends Controller
         }
 
         try {
-            // Periksa apakah snap_token masih valid
             if ($booking->snap_token && $booking->snap_token_expires_at > now()) {
                 return response()->json([
                     'snap_token' => $booking->snap_token,
                 ]);
             }
-
-            // Buat snap_token baru jika tidak ada atau sudah kedaluwarsa
             $transactionDetails = [
                 'transaction_details' => [
                     'order_id' => $booking->id,
                     'gross_amount' => $booking->total_price,
                 ],
             ];
-
             $snapToken = Snap::getSnapToken($transactionDetails);
 
-            // Simpan snap_token dan waktu kedaluwarsa (misalnya, 1 jam dari sekarang)
             $booking->update([
                 'snap_token' => $snapToken,
                 'snap_token_expires_at' => now()->addHours(1),
             ]);
-
-            \Log::info('Midtrans Response:', ['snap_token' => $snapToken]);
 
             return response()->json([
                 'snap_token' => $snapToken,
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Midtrans Error:', ['error' => $e->getMessage()]);
-
             return response()->json(['error' => 'Terjadi kesalahan saat memproses pembayaran.'], 500);
         }
     }
