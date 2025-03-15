@@ -100,6 +100,7 @@ const proceedToPayment = async (bookingId: number) => {
           <table class="w-full border-collapse rounded-lg overflow-hidden shadow-sm">
             <thead>
               <tr class="bg-blue-50">
+                <th class="p-2 md:p-4 text-left text-gray-700 font-semibold">ID</th>
                 <th class="p-2 md:p-4 text-left text-gray-700 font-semibold">Tanggal</th>
                 <th class="p-2 md:p-4 text-left text-gray-700 font-semibold">Layanan</th>
                 <th class="p-2 md:p-4 text-left text-gray-700 font-semibold">Sesi</th>
@@ -114,6 +115,7 @@ const proceedToPayment = async (bookingId: number) => {
                 :key="booking.id"
                 class="border-b border-gray-200 hover:bg-gray-50 transition duration-200"
               >
+                <td class="p-2 md:p-4 text-gray-700">{{ booking.id }}</td>
                 <td class="p-2 md:p-4 text-gray-700">{{ booking.date }}</td>
                 <td class="p-2 md:p-4 text-gray-700 font-medium">{{ booking.service.toUpperCase() }}</td>
                 <td class="p-2 md:p-4 text-gray-700">{{ booking.session }}</td>
@@ -122,7 +124,7 @@ const proceedToPayment = async (bookingId: number) => {
                   <span
                     :class="{
                       'text-yellow-600': booking.status === 'pending',
-                      'text-green-600': booking.status === 'completed',
+                      'text-green-600': booking.status === 'finished',
                       'text-red-600': booking.status === 'canceled',
                     }"
                     class="font-semibold"
