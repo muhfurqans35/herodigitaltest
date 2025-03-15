@@ -44,7 +44,10 @@ class BookingController extends Controller
     public function index()
     {
         $bookings = Booking::where('user_id', Auth::id())->orderBy('date', 'asc')->get();
-        return Inertia::render('bookings/Index', ['bookings' => $bookings]);
+        return Inertia::render('bookings/Index', [
+            'bookings' => $bookings,
+            'title' => 'Daftar Booking'
+        ]);
     }
 
     public function create()
@@ -52,7 +55,9 @@ class BookingController extends Controller
         if (!Auth::check()) {
             return redirect('/login')->with('error', 'Silakan login terlebih dahulu untuk membuat booking.');
         }
-        return Inertia::render('bookings/create/Index');
+        return Inertia::render('bookings/create/Index', [
+            'title' => 'Buat Booking'
+        ]);
     }
 
     public function destroy($id)

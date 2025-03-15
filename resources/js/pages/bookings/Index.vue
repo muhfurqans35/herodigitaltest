@@ -40,9 +40,7 @@ const proceedToPayment = async (bookingId: number) => {
 };
 </script>
 <template>
-        <Head>
-    <title>Daftar Booking - Rental PS</title>
-  </Head>
+        
   <div class="min-h-screen bg-black text-white flex flex-col">
     <Navbar />
     <div class="flex-grow flex items-center justify-center p-4">

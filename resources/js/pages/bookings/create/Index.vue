@@ -52,9 +52,7 @@ const submit = () => {
 </script>
 
 <template>
-      <Head>
-    <title>Buat Booking Baru - Rental PS</title>
-  </Head>
+      
   <div class="min-h-screen bg-black text-white flex flex-col">
     <Navbar />
     <div class="flex-grow flex items-center justify-center p-4">
