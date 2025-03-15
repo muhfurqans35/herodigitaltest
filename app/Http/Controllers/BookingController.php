@@ -70,10 +70,9 @@ class BookingController extends Controller
 
             \Log::info('Midtrans Response:', ['snap_token' => $snapToken]);
 
-            return Inertia::render('BookingPayment', [
-                'snap_token' => $snapToken,
-                'booking' => $booking,
-            ]);
+            // Redirect ke halaman pembayaran Midtrans
+            return redirect()->away("https://app.sandbox.midtrans.com/snap/v2/vtweb/{$snapToken}");
+
         } catch (\Exception $e) {
             \Log::error('Midtrans Error:', ['error' => $e->getMessage()]);
 
