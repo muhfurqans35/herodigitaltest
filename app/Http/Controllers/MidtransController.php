@@ -12,7 +12,7 @@ class MidtransController extends Controller
 
     public function __construct()
     {
-        Config::$serverKey = config('app.midtrans.server_key');
+        Config::$serverKey = env('MIDTRANS_SERVER_KEY');
         Config::$isProduction = false;
     }
     public function payment(Request $request, $id)

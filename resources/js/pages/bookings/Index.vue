@@ -15,7 +15,6 @@ interface Booking {
 
 const props = defineProps<{ bookings: Booking[] }>();
 
-// For update modal
 const showUpdateModal = ref(false);
 const selectedBooking = reactive({
   id: 0,
@@ -161,7 +160,6 @@ const proceedToPayment = async (bookingId: number) => {
       </div>
     </div>
 
-    <!-- Update Modal -->
     <div v-if="showUpdateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
         <div class="flex justify-between items-center mb-4">
