@@ -26,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class
         ]);
         $middleware->validateCsrfTokens(except: [
-            'api/midtrans/*',
+            'midtrans/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
