@@ -10,7 +10,7 @@ class Booking extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['date', 'service', 'session', 'total_price', 'status', 'user_id'];
+    protected $fillable = ['date', 'service', 'session', 'total_price', 'status', 'user_id', 'snap_token', 'snap_token_expires_at'];
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
