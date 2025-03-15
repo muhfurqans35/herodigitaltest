@@ -39,7 +39,7 @@ class MidtransController extends Controller
 
             $booking->update([
                 'snap_token' => $snapToken,
-                'snap_token_expires_at' => now()->addHours(1),
+                'snap_token_expires_at' => now()->addHours(12),
             ]);
 
             return response()->json([

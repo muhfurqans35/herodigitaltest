@@ -37,7 +37,7 @@ class BookingController extends Controller
             'status' => 'pending'
         ]);
 
-        return redirect()->route('booking.payment', ['id' => $booking->id])
+        return redirect()->route('booking.index')
             ->with('success', 'Booking berhasil! Silakan lakukan pembayaran.');
     }
 
