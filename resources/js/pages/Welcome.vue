@@ -4,6 +4,9 @@ import Navbar from '@/components/Navbar.vue';
 </script>
 
 <template>
+    <Head>
+    <title>Home - Rental PS</title>
+  </Head>
   <div class="min-h-screen bg-black text-white">
     <Navbar />
 

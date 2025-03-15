@@ -14,8 +14,6 @@ class MidtransController extends Controller
     {
         Config::$serverKey = config('midtrans.server_key');
         Config::$isProduction = false;
-        Config::$isSanitized = true;
-        Config::$is3ds = true;
     }
     public function payment(Request $request, $id)
     {
