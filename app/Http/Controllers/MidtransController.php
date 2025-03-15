@@ -50,7 +50,11 @@ class MidtransController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Midtrans Error:', ['error' => $e->getMessage()]);
-            return response()->json(['error' => 'Terjadi kesalahan saat memproses pembayaran.'], 500);
+            return response()->json([
+                'error' => 'Terjadi kesalahan saat memproses pembayaran.',
+                'message' => $e->getMessage(), // Menampilkan pesan error
+                'trace' => $e->getTrace(), // Menampilkan stack trace untuk debugging
+            ], 500);
         }
     }
 
