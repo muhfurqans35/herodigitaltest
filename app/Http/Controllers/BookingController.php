@@ -66,6 +66,7 @@ class BookingController extends Controller
                 ],
             ];
 
+            // Dapatkan snap_token dari Midtrans
             $snapToken = Snap::getSnapToken($transactionDetails);
 
             \Log::info('Midtrans Response:', ['snap_token' => $snapToken]);
