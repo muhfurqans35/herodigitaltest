@@ -22,7 +22,10 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/bookings/{id}', [BookingController::class, 'destroy']);
     Route::get('/bookings', [BookingController::class, 'index'])->name('booking.index');
     Route::get('/bookings/create', [BookingController::class, 'create'])->name('booking.create');
+    Route::put('/bookings/{id}', [BookingController::class, 'update'])->name('bookings.update');
+
 });
+
 Route::post('/midtrans/callback', [MidtransController::class, 'handleCallback']);
 
 

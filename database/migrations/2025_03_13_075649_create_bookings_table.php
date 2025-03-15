@@ -14,8 +14,8 @@ return new class extends Migration {
             $table->integer('session');
             $table->integer('total_price');
             $table->string('status')->default('pending');
-            $table->string('snap_token')->nullable()->after('status');
-            $table->timestamp('snap_token_expires_at')->nullable()->after('snap_token');
+            $table->string('snap_token')->nullable();
+            $table->timestamp('snap_token_expires_at')->nullable();
             $table->timestamps();
         });
     }

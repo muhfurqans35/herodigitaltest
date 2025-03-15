@@ -13,7 +13,7 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'date' => 'required|date',
+            'date' => 'required|date|after_or_equal:today',
             'service' => 'required|in:ps4,ps5',
             'session' => 'required|integer|min:1'
         ]);
@@ -43,11 +43,15 @@ class BookingController extends Controller
 
     public function index()
     {
-        $bookings = Booking::where('user_id', Auth::id())->orderBy('date', 'asc')->get();
-        return Inertia::render('bookings/Index', [
-            'bookings' => $bookings,
-            'title' => 'Daftar Booking'
-        ]);
+
+        if (Auth::user()->role === 'admin') {
+
+            $bookings = Booking::all();
+        } else {
+            $bookings = Booking::where('user_id', Auth::id())->orderBy('date', 'asc')->get();
+        }
+
+        return inertia('bookings/Index', ['bookings' => $bookings]);
     }
 
     public function create()
@@ -55,9 +59,7 @@ class BookingController extends Controller
         if (!Auth::check()) {
             return redirect('/login')->with('error', 'Silakan login terlebih dahulu untuk membuat booking.');
         }
-        return Inertia::render('bookings/create/Index', [
-            'title' => 'Buat Booking'
-        ]);
+        return Inertia::render('bookings/create/Index');
     }
 
     public function destroy($id)
@@ -72,4 +74,34 @@ class BookingController extends Controller
 
         return redirect()->route('booking.index')->with('success', 'Booking berhasil dihapus.');
     }
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'date' => 'required|date|after_or_equal:today',
+            'service' => 'required|in:ps4,ps5',
+            'session' => 'required|integer|min:1|max:10',
+        ]);
+
+        $booking = Booking::findOrFail($id);
+
+        if ($booking->user_id !== Auth::id()) {
+            return redirect()->route('booking.index')->with('error', 'Anda tidak memiliki akses untuk mengedit booking ini.');
+        }
+
+        $basePrice = $request->service === 'ps4' ? 30000 : 40000;
+        $bookingDate = Carbon::parse($request->date)->toDateString();
+        $isWeekend = Carbon::parse($bookingDate)->isWeekend();
+        $surcharge = $isWeekend ? 50000 : 0;
+        $totalPrice = ($basePrice * $request->session) + $surcharge;
+
+        $booking->update([
+            'date' => $bookingDate,
+            'service' => $request->service,
+            'session' => $request->session,
+            'total_price' => $totalPrice,
+        ]);
+
+        return redirect()->route('booking.index')->with('success', 'Booking berhasil diperbarui.');
+    }
+
 }

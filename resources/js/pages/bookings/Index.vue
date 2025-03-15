@@ -2,7 +2,7 @@
 import { Link, router } from '@inertiajs/vue3';
 import Navbar from '@/components/Navbar.vue';
 import axios from 'axios';
-import { useTitle } from '@vueuse/core';
+import { ref, reactive } from 'vue';
 
 interface Booking {
   id: number;
@@ -13,7 +13,48 @@ interface Booking {
   status: string;
 }
 
-defineProps<{ bookings: Booking[] }>();
+const props = defineProps<{ bookings: Booking[] }>();
+
+// For update modal
+const showUpdateModal = ref(false);
+const selectedBooking = reactive({
+  id: 0,
+  date: '',
+  service: '',
+  session: 0,
+  total_price: 0,
+  status: ''
+});
+
+const openUpdateModal = (booking: Booking) => {
+  selectedBooking.id = booking.id;
+  selectedBooking.date = booking.date;
+  selectedBooking.service = booking.service;
+  selectedBooking.session = booking.session;
+  selectedBooking.total_price = booking.total_price;
+  selectedBooking.status = booking.status;
+  showUpdateModal.value = true;
+};
+
+const closeUpdateModal = () => {
+  showUpdateModal.value = false;
+};
+
+const updateBooking = () => {
+  router.put(`/bookings/${selectedBooking.id}`, {
+    date: selectedBooking.date,
+    service: selectedBooking.service,
+    session: selectedBooking.session,
+  }, {
+    onSuccess: () => {
+      closeUpdateModal();
+      alert('Booking berhasil diperbarui.');
+    },
+    onError: (errors) => {
+      alert('Terjadi kesalahan saat memperbarui booking: ' + JSON.stringify(errors));
+    },
+  });
+};
 
 const deleteBooking = (id: number) => {
   if (confirm('Apakah Anda yakin ingin menghapus booking ini?')) {
@@ -40,14 +81,14 @@ const proceedToPayment = async (bookingId: number) => {
   }
 };
 </script>
+
 <template>
-        
   <div class="min-h-screen bg-black text-white flex flex-col">
     <Navbar />
     <div class="flex-grow flex items-center justify-center p-4">
       <div class="w-full max-w-3xl bg-white rounded-xl shadow-md p-6 md:p-8">
         <div class="flex flex-col md:flex-row justify-between items-center mb-6">
-          <h2 class="text-2xl font-bold text-gray-800 mb-4 md:mb-0">Daftar Booking</h2>
+          <h2 class="text-2xl font-bold text-gray-800 mb-4 md:mb-0">List Booking</h2>
           <Link
             href="/bookings/create"
             class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
@@ -100,6 +141,13 @@ const proceedToPayment = async (bookingId: number) => {
                   </button>
                   <button
                     v-if="booking.status === 'pending'"
+                    @click="openUpdateModal(booking)"
+                    class="bg-blue-500 text-white px-2 md:px-3 py-1 rounded-lg hover:bg-blue-600 transition duration-300"
+                  >
+                    Update
+                  </button>
+                  <button
+                    v-if="booking.status === 'pending'"
                     @click="deleteBooking(booking.id)"
                     class="bg-red-500 text-white px-2 md:px-3 py-1 rounded-lg hover:bg-red-600 transition duration-300"
                   >
@@ -110,6 +158,75 @@ const proceedToPayment = async (bookingId: number) => {
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+    <!-- Update Modal -->
+    <div v-if="showUpdateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold text-gray-800">Update Booking</h3>
+          <button @click="closeUpdateModal" class="text-gray-500 hover:text-gray-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <form @submit.prevent="updateBooking" class="space-y-4">
+          <div>
+            <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+            <input
+              type="date"
+              id="date"
+              v-model="selectedBooking.date"
+              class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+              required
+            />
+          </div>
+          
+          <div>
+            <label for="service" class="block text-sm font-medium text-gray-700 mb-1">Layanan</label>
+            <select
+              id="service"
+              v-model="selectedBooking.service"
+              class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+              required
+            >
+              <option value="ps4">PS4</option>
+              <option value="ps5">PS5</option>
+            </select>
+          </div>
+          
+          <div>
+            <label for="session" class="block text-sm font-medium text-gray-700 mb-1">Sesi</label>
+            <input
+              type="number"
+              id="session"
+              v-model="selectedBooking.session"
+              min="1"
+              max="10"
+              class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+              required
+            />
+          </div>
+          
+          <div class="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              @click="closeUpdateModal"
+              class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-300"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300"
+            >
+              Simpan
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

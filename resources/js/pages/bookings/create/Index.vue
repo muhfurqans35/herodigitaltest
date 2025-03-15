@@ -4,7 +4,7 @@ import { useForm } from "@inertiajs/vue3";
 import { DatePicker } from "v-calendar";
 import "v-calendar/dist/style.css";
 import Navbar from '@/components/Navbar.vue';
-import { useTitle } from '@vueuse/core';
+
 
 interface BookingForm {
   date: string | null;
@@ -38,7 +38,12 @@ const submit = () => {
     return;
   }
 
-  const formattedDate = new Date(form.date).toISOString().split("T")[0];
+  const selectedDate = new Date(form.date);
+
+  selectedDate.setMinutes(selectedDate.getMinutes() - selectedDate.getTimezoneOffset());
+
+  const formattedDate = selectedDate.toISOString().split("T")[0];
+
   form.date = formattedDate;
 
   form.post("/booking", {
@@ -51,6 +56,8 @@ const submit = () => {
     },
   });
 };
+
+
 </script>
 
 <template>

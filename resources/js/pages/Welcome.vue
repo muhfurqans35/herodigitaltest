@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import Navbar from '@/components/Navbar.vue';
-import { useTitle } from '@vueuse/core';
+
 </script>
 
 <template>
