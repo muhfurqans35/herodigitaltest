@@ -33,12 +33,7 @@ class MidtransController extends Controller
                 'transaction_details' => [
                     'order_id' => $booking->id . '-' . time(),
                     'gross_amount' => $booking->total_price,
-                ],
-                'callbacks' => [
-                    'finish' => url('https://herodigitaltest-main-mk5che.laravel.cloud/midtrans/callback'),
-                    'error' => url('https://herodigitaltest-main-mk5che.laravel.cloud/bookings'),
-                    'unfinish' => url('https://herodigitaltest-main-mk5che.laravel.cloud/bookings'),
-                ],
+                ]
             ];
             $snapToken = Snap::getSnapToken($transactionDetails);
 
