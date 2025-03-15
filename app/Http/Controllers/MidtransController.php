@@ -24,7 +24,7 @@ class MidtransController extends Controller
         }
 
         try {
-            if ($booking->snap_token && $booking->snap_token_expires_at > now()) {
+            if ($booking->snap_token) {
                 return response()->json([
                     'snap_token' => $booking->snap_token,
                 ]);
