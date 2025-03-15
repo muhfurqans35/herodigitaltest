@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\MidtransController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -18,12 +19,12 @@ Route::get('/booking', function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/booking', [BookingController::class, 'store']);
-    Route::get('/booking/payment/{id}', [BookingController::class, 'payment'])->name('booking.payment');
+    Route::get('/booking/payment/{id}', [MidtransController::class, 'payment'])->name('booking.payment');
     Route::delete('/bookings/{id}', [BookingController::class, 'destroy']);
     Route::get('/bookings', [BookingController::class, 'index'])->name('booking.index');
     Route::get('/bookings/create', [BookingController::class, 'create'])->name('booking.create');
-
 });
+Route::post('/midtrans/callback', [MidtransController::class, 'handleCallback']);
 
 
 require __DIR__ . '/settings.php';

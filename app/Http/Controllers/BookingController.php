@@ -5,20 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Booking;
 use Carbon\Carbon;
-use Midtrans\Snap;
-use Midtrans\Config;
+
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 class BookingController extends Controller
 {
-    public function __construct()
-    {
-
-        Config::$serverKey = env('MIDTRANS_SERVER_KEY');
-
-        Config::$isProduction = false;
-
-    }
     public function store(Request $request)
     {
         $request->validate([
@@ -48,51 +39,6 @@ class BookingController extends Controller
 
         return redirect()->route('booking.payment', ['id' => $booking->id])
             ->with('success', 'Booking berhasil! Silakan lakukan pembayaran.');
-    }
-
-    public function payment(Request $request, $id)
-    {
-        $booking = Booking::findOrFail($id);
-
-        if ($booking->status !== 'pending') {
-            return response()->json(['error' => 'Booking ini sudah diproses atau dibatalkan.'], 400);
-        }
-
-        try {
-            // Periksa apakah snap_token masih valid
-            if ($booking->snap_token && $booking->snap_token_expires_at > now()) {
-                return response()->json([
-                    'snap_token' => $booking->snap_token,
-                ]);
-            }
-
-            // Buat snap_token baru jika tidak ada atau sudah kedaluwarsa
-            $transactionDetails = [
-                'transaction_details' => [
-                    'order_id' => $booking->id,
-                    'gross_amount' => $booking->total_price,
-                ],
-            ];
-
-            $snapToken = Snap::getSnapToken($transactionDetails);
-
-            // Simpan snap_token dan waktu kedaluwarsa (misalnya, 1 jam dari sekarang)
-            $booking->update([
-                'snap_token' => $snapToken,
-                'snap_token_expires_at' => now()->addHours(1),
-            ]);
-
-            \Log::info('Midtrans Response:', ['snap_token' => $snapToken]);
-
-            return response()->json([
-                'snap_token' => $snapToken,
-            ]);
-
-        } catch (\Exception $e) {
-            \Log::error('Midtrans Error:', ['error' => $e->getMessage()]);
-
-            return response()->json(['error' => 'Terjadi kesalahan saat memproses pembayaran.'], 500);
-        }
     }
 
     public function index()
