@@ -1,37 +1,55 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3';
 import Navbar from '@/components/Navbar.vue';
+import Modal from '@/components/Modal.vue';
 import axios from 'axios';
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
+import { Pencil, Trash2, CreditCard, Star } from 'lucide-vue-next'
 
 interface Booking {
   id: number;
   date: string;
-  service: string;
+  service: Service;
   session: number;
+  units: number;
   total_price: number;
   status: string;
+  start_time: string; 
+  end_time: string; 
+  service_id: number;
 }
 
-const props = defineProps<{ bookings: Booking[] }>();
+interface Service {
+  id: string
+  name: string
+}
+
+const props = defineProps<{
+  bookings: Booking[]
+  services: Service[]
+}>()
 
 const showUpdateModal = ref(false);
-const selectedBooking = reactive({
+const selectedBooking = reactive<Booking>({
   id: 0,
   date: '',
-  service: '',
+  service: {
+    id: '',
+    name: '',
+  },
   session: 0,
+  units:1,
   total_price: 0,
-  status: ''
+  status: '',
+  start_time: '',
+  end_time: '',
+  service_id: 0,
 });
+const showReviewModal = ref(false);
+const selectedBookingId = ref<number | null>(null);
 
 const openUpdateModal = (booking: Booking) => {
-  selectedBooking.id = booking.id;
-  selectedBooking.date = booking.date;
-  selectedBooking.service = booking.service;
-  selectedBooking.session = booking.session;
-  selectedBooking.total_price = booking.total_price;
-  selectedBooking.status = booking.status;
+  Object.assign(selectedBooking, booking);
   showUpdateModal.value = true;
 };
 
@@ -42,28 +60,22 @@ const closeUpdateModal = () => {
 const updateBooking = () => {
   router.put(`/bookings/${selectedBooking.id}`, {
     date: selectedBooking.date,
-    service: selectedBooking.service,
+    service_id: selectedBooking.service_id,
     session: selectedBooking.session,
+    start_time: selectedBooking.start_time,
+    units: selectedBooking.units
   }, {
     onSuccess: () => {
       closeUpdateModal();
       alert('Booking berhasil diperbarui.');
     },
-    onError: (errors) => {
-      alert('Terjadi kesalahan saat memperbarui booking: ' + JSON.stringify(errors));
-    },
   });
 };
 
 const deleteBooking = (id: number) => {
-  if (confirm('Apakah Anda yakin ingin menghapus booking ini?')) {
+  if (confirm('Hapus booking ini?')) {
     router.delete(`/bookings/${id}`, {
-      onSuccess: () => {
-        alert('Booking berhasil dihapus.');
-      },
-      onError: (errors) => {
-        alert('Terjadi kesalahan saat menghapus booking: ' + JSON.stringify(errors));
-      },
+      onSuccess: () => alert('Booking dihapus.'),
     });
   }
 };
@@ -71,163 +83,229 @@ const deleteBooking = (id: number) => {
 const proceedToPayment = async (bookingId: number) => {
   try {
     const response = await axios.get<{ snap_token: string }>(`/booking/payment/${bookingId}`);
-    const snapToken = response.data.snap_token;
-
-    window.location.href = `https://app.sandbox.midtrans.com/snap/v2/vtweb/${snapToken}`;
+    window.location.href = `https://app.sandbox.midtrans.com/snap/v2/vtweb/${response.data.snap_token}`;
   } catch (error) {
-    console.error('Error:', error);
-    alert('Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.');
+    alert('Gagal memproses pembayaran.');
   }
 };
+
+
+const reviewForm = reactive({
+  rating: 0,
+  comment: '',
+});
+
+const openReviewModal = (bookingId: number) => {
+  selectedBookingId.value = bookingId;
+  reviewForm.rating = 0;
+  reviewForm.comment = '';
+  showReviewModal.value = true;
+};
+
+const selectedBookingData = computed(() =>
+  props.bookings.find(b => b.id === selectedBookingId.value) ?? null
+);
+
+const submitReview = async () => {
+  if (!selectedBookingId.value || reviewForm.rating === 0) {
+    alert('Berikan rating terlebih dahulu.');
+    return;
+  }
+
+  try {
+    await axios.post('/reviews', {
+      booking_id: selectedBookingId.value,
+      rating: reviewForm.rating,
+      comment: reviewForm.comment,
+    });
+
+    showReviewModal.value = false;
+    alert('Review berhasil disimpan.');
+  } catch (error) {
+    alert('Gagal menyimpan review.');
+  }
+};
+
 </script>
 
-<template>
-  <div class="min-h-screen bg-black text-white flex flex-col">
-    <Navbar />
-    <div class="flex-grow flex items-center justify-center p-4">
-      <div class="w-full max-w-3xl bg-white rounded-xl shadow-md p-6 md:p-8">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-6">
-          <h2 class="text-2xl font-bold text-gray-800 mb-4 md:mb-0">List Booking</h2>
-          <Link
-            href="/bookings/create"
-            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300"
-          >
-            Buat Booking Baru
-          </Link>
-        </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full border-collapse rounded-lg overflow-hidden shadow-sm">
-            <thead>
-              <tr class="bg-blue-50">
-                <th class="p-2 md:p-4 text-left text-gray-700 font-semibold">ID</th>
-                <th class="p-2 md:p-4 text-left text-gray-700 font-semibold">Tanggal</th>
-                <th class="p-2 md:p-4 text-left text-gray-700 font-semibold">Layanan</th>
-                <th class="p-2 md:p-4 text-left text-gray-700 font-semibold">Sesi</th>
-                <th class="p-2 md:p-4 text-left text-gray-700 font-semibold">Total Harga</th>
-                <th class="p-2 md:p-4 text-left text-gray-700 font-semibold">Status</th>
-                <th class="p-2 md:p-4 text-left text-gray-700 font-semibold">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="booking in bookings"
-                :key="booking.id"
-                class="border-b border-gray-200 hover:bg-gray-50 transition duration-200"
-              >
-                <td class="p-2 md:p-4 text-gray-700">{{ booking.id }}</td>
-                <td class="p-2 md:p-4 text-gray-700">{{ booking.date }}</td>
-                <td class="p-2 md:p-4 text-gray-700 font-medium">{{ booking.service.toUpperCase() }}</td>
-                <td class="p-2 md:p-4 text-gray-700">{{ booking.session }}</td>
-                <td class="p-2 md:p-4 text-gray-700">Rp {{ booking.total_price.toLocaleString() }}</td>
-                <td class="p-2 md:p-4">
-                  <span
-                    :class="{
-                      'text-yellow-600': booking.status === 'pending',
-                      'text-green-600': booking.status === 'finished',
-                      'text-red-600': booking.status === 'canceled',
-                    }"
-                    class="font-semibold"
-                  >
-                    {{ booking.status }}
-                  </span>
-                </td>
-                <td class="p-2 md:p-4 flex space-x-2">
-                  <button
-                    v-if="booking.status === 'pending'"
-                    @click="proceedToPayment(booking.id)"
-                    class="bg-green-500 text-white px-2 md:px-3 py-1 rounded-lg hover:bg-green-600 transition duration-300"
-                  >
-                    Bayar
-                  </button>
-                  <button
-                    v-if="booking.status === 'pending'"
-                    @click="openUpdateModal(booking)"
-                    class="bg-blue-500 text-white px-2 md:px-3 py-1 rounded-lg hover:bg-blue-600 transition duration-300"
-                  >
-                    Update
-                  </button>
-                  <button
-                    v-if="booking.status === 'pending'"
-                    @click="deleteBooking(booking.id)"
-                    class="bg-red-500 text-white px-2 md:px-3 py-1 rounded-lg hover:bg-red-600 transition duration-300"
-                  >
-                    Hapus
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+
+<template>
+  <div class="min-h-screen bg-black text-white">
+    <Navbar />
+    <div class="p-4 max-w-6xl mx-auto mt-8">
+      <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+        <h2 class="text-2xl font-bold">Booking Saya</h2>
+        <Link href="/bookings/create" class="bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700 text-sm sm:text-base">
+          Booking Baru
+        </Link>
+      </div>
+
+      <div class="space-y-4 text-gray-700">
+      <div class="hidden sm:grid grid-cols-9 bg-blue-100 text-gray-800 text-sm font-semibold rounded-t-xl px-4 py-2">
+        <div>ID</div>
+        <div>Tanggal</div>
+        <div>Layanan</div>
+        <div>Sesi</div>
+        <div>Unit</div>
+        <div>Waktu</div>
+        <div>Total</div>
+        <div>Status</div>
+        <div>Aksi</div>
+      </div>
+
+      <div
+        v-for="b in bookings"
+        :key="b.id"
+        class="grid grid-cols-1 sm:grid-cols-9 gap-2 text-sm px-4 py-3 bg-white rounded-xl shadow-sm sm:items-center"
+      >
+        <div>
+          <span class="sm:hidden font-semibold text-gray-500">ID: </span>{{ b.id }}
+        </div>
+        <div>
+          <span class="sm:hidden font-semibold text-gray-500">Tanggal: </span>{{ b.date }}
+        </div>
+        <div>
+          <span class="sm:hidden font-semibold text-gray-500">Layanan: </span>{{ b.service?.name }}
+        </div>
+        <div>
+          <span class="sm:hidden font-semibold text-gray-500">Sesi: </span>{{ b.session }}
+        </div>
+        <div>
+          <span class="sm:hidden font-semibold text-gray-500">Unit: </span>{{ b.units }}
+        </div>
+        <div>
+          <span class="sm:hidden font-semibold text-gray-500">Waktu: </span>{{ b.start_time }} - {{ b.end_time }}
+        </div>
+        <div>
+          <span class="sm:hidden font-semibold text-gray-500">Total: </span>Rp {{ b.total_price.toLocaleString() }}
+        </div>
+        <div>
+          <span class="sm:hidden font-semibold text-gray-500">Status: </span>
+          <span :class="{
+            'text-yellow-500': b.status === 'pending',
+            'text-yellow-700': b.status === 'processing',
+            'text-green-500': b.status === 'paid',
+            'text-green-700': b.status === 'finished',
+            'text-red-600': b.status === 'canceled',
+          }">{{ b.status }}</span>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-if="b.status === 'pending'"
+            @click="proceedToPayment(b.id)"
+            class="text-green-500 hover:bg-green-100 p-2 rounded"
+            title="Bayar"
+          >
+            <CreditCard class="w-4 h-4" />
+          </button>
+          <button
+            v-if="b.status === 'pending'"
+            @click="openUpdateModal(b)"
+            class="text-blue-500 hover:bg-blue-100 p-2 rounded"
+            title="Edit"
+          >
+            <Pencil class="w-4 h-4" />
+          </button>
+          <button
+            v-if="b.status === 'pending'"
+            @click="deleteBooking(b.id)"
+            class="text-red-500 hover:bg-red-100 p-2 rounded"
+            title="Hapus"
+          >
+            <Trash2 class="w-4 h-4" />
+          </button>
+          <button
+            v-if="b.status === 'finished'"
+            @click="openReviewModal(b.id)"
+            class="text-yellow-500 hover:bg-yellow-100 p-2 rounded"
+            title="Review"
+          >
+            <Star class="w-4 h-4" />
+          </button>
         </div>
       </div>
     </div>
 
-    <div v-if="showUpdateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xl font-bold text-gray-800">Update Booking</h3>
-          <button @click="closeUpdateModal" class="text-gray-500 hover:text-gray-700">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        <form @submit.prevent="updateBooking" class="space-y-4">
-          <div>
-            <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+
+      <!-- Modal Update -->
+      <Modal :show="showUpdateModal" title="Update Booking" @update:show="showUpdateModal = false">
+        <form @submit.prevent="updateBooking" class="space-y-4 p-2 sm:p-4">
+          <div class="grid sm:grid-cols-2 gap-3">
             <input
-              type="date"
-              id="date"
               v-model="selectedBooking.date"
-              class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+              type="date"
               required
+              class="w-full border p-2 rounded bg-white text-black"
             />
-          </div>
-          
-          <div>
-            <label for="service" class="block text-sm font-medium text-gray-700 mb-1">Layanan</label>
-            <select
-              id="service"
-              v-model="selectedBooking.service"
-              class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-              required
-            >
-              <option value="ps4">PS4</option>
-              <option value="ps5">PS5</option>
-            </select>
-          </div>
-          
-          <div>
-            <label for="session" class="block text-sm font-medium text-gray-700 mb-1">Sesi</label>
             <input
-              type="number"
-              id="session"
-              v-model="selectedBooking.session"
-              min="1"
-              max="10"
-              class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+              v-model="selectedBooking.start_time"
+              type="time"
               required
+              class="w-full border p-2 rounded bg-white text-black"
             />
           </div>
-          
-          <div class="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              @click="closeUpdateModal"
-              class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition duration-300"
+          <select
+            v-model="selectedBooking.service_id"
+            required
+            class="w-full border p-2 rounded bg-white text-black"
+          >
+            <option disabled value="">Pilih layanan</option>
+            <option
+              v-for="service in services"
+              :key="service.id"
+              :value="service.id"
+              class="bg-white text-black"
             >
-              Batal
-            </button>
-            <button
-              type="submit"
-              class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300"
-            >
+              {{ service.name }}
+            </option>
+          </select>
+          <input
+            v-model="selectedBooking.session"
+            type="number"
+            min="1"
+            required
+            class="w-full border p-2 rounded bg-white text-black"
+          />
+          <div class="text-right">
+            <button type="submit" class="bg-blue-600 px-4 py-2 text-white rounded text-sm sm:text-base">
               Simpan
             </button>
           </div>
         </form>
-      </div>
+      </Modal>
+
+      <!-- Modal Review -->
+      <Modal :show="showReviewModal" title="Beri Review" @update:show="showReviewModal = false">
+        <div class="space-y-4 p-2 sm:p-4">
+          <div>
+            <label class="block font-medium mb-2">Rating:</label>
+            <div class="flex space-x-1">
+              <span
+                v-for="n in 5"
+                :key="n"
+                @click="reviewForm.rating = n"
+                class="cursor-pointer text-2xl"
+                :class="n <= reviewForm.rating ? 'text-yellow-500' : 'text-gray-300'"
+              >★</span>
+            </div>
+          </div>
+          <div>
+            <label class="block font-medium mb-2">Komentar:</label>
+            <textarea
+              v-model="reviewForm.comment"
+              rows="3"
+              class="w-full border rounded p-2 bg-white text-black"
+            ></textarea>
+          </div>
+          <div class="text-right">
+            <button @click="submitReview" class="bg-blue-600 px-4 py-2 text-white rounded text-sm sm:text-base">
+              Kirim
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   </div>
 </template>
+

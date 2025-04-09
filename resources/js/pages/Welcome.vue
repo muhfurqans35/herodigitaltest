@@ -36,7 +36,7 @@ import Navbar from '@/components/Navbar.vue';
     </section>
 
     <footer class="text-center py-6 bg-black border-t border-red-700 text-gray-400">
-      <p>&copy; 2025 Sewa PS4 & PS5 | All Rights Reserved</p>
+      <p>&copy; 2025 Rental PS | All Rights Reserved</p>
     </footer>
   </div>
 </template>

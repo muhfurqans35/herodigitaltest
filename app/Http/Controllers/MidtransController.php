@@ -65,12 +65,12 @@ class MidtransController extends Controller
         }
         if ($transactionStatus == 'capture') {
             if ($fraudStatus == 'accept') {
-                $booking->update(['status' => 'finished']);
+                $booking->update(['status' => 'paid']);
             } elseif ($fraudStatus == 'challenge') {
                 $booking->update(['status' => 'pending']);
             }
         } elseif ($transactionStatus == 'settlement') {
-            $booking->update(['status' => 'finished']);
+            $booking->update(['status' => 'paid']);
         } elseif (in_array($transactionStatus, ['cancel', 'deny', 'expire'])) {
             $booking->update(['status' => 'canceled']);
         } elseif ($transactionStatus == 'pending') {

@@ -3,34 +3,50 @@ import { computed } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import { DatePicker } from "v-calendar";
 import "v-calendar/dist/style.css";
-import Navbar from '@/components/Navbar.vue';
+import Navbar from "@/components/Navbar.vue";
 
+const props = defineProps<{
+  services: {
+    id: number;
+    name: string;
+    price: number;
+  }[];
+}>();
 
 interface BookingForm {
   date: string | null;
-  service: "ps4" | "ps5";
+  service_id: number;
   session: number;
+  units: number;
+  start_time: string;
   [key: string]: any;
 }
 
-
 const form = useForm<BookingForm>({
   date: null,
-  service: "ps4",
+  service_id: props.services[0]?.id || 1,
   session: 1,
+  units: 1,
+  start_time: "06:00",
 });
 
-const basePrice = computed<number>(() => (form.service === "ps4" ? 30000 : 40000));
+const selectedService = computed(() =>
+  props.services.find((s) => s.id === form.service_id)
+);
 
-const isWeekend = computed<boolean>(() => {
+const basePrice = computed(() => selectedService.value?.price || 0);
+
+const isWeekend = computed(() => {
   if (!form.date) return false;
   const day = new Date(form.date).getDay();
-  return day === 6 || day === 0;
+  return day === 0 || day === 6;
 });
 
-const surcharge = computed<number>(() => (isWeekend.value ? 50000 : 0));
+const surcharge = computed(() => (isWeekend.value ? 50000 : 0));
 
-const totalPrice = computed<number>(() => basePrice.value * form.session + surcharge.value);
+const totalPrice = computed(() =>
+  basePrice.value * form.session * form.units + surcharge.value
+);
 
 const submit = () => {
   if (!form.date) {
@@ -38,84 +54,119 @@ const submit = () => {
     return;
   }
 
+  if (form.session < 1 || form.units < 1) {
+    alert("Jumlah sesi dan unit harus minimal 1");
+    return;
+  }
+
   const selectedDate = new Date(form.date);
-
   selectedDate.setMinutes(selectedDate.getMinutes() - selectedDate.getTimezoneOffset());
-
-  const formattedDate = selectedDate.toISOString().split("T")[0];
-
-  form.date = formattedDate;
+  form.date = selectedDate.toISOString().split("T")[0];
 
   form.post("/booking", {
     onSuccess: () => {
       alert("Booking berhasil! Silakan lakukan pembayaran.");
     },
     onError: (errors) => {
-      console.error(errors);
-      alert("Terjadi kesalahan saat booking: " + JSON.stringify(errors));
+      alert("Terjadi kesalahan:\n" + Object.values(errors).join("\n"));
     },
   });
 };
-
-
 </script>
 
 <template>
-      
-  <div class="min-h-screen bg-black text-white flex flex-col">
+  <div class="min-h-screen bg-black text-white">
     <Navbar />
-    <div class="flex-grow flex items-center justify-center p-4">
-      <div class="w-full max-w-lg bg-white text-gray-600 rounded-xl shadow-lg p-6 md:p-8">
-        <h2 class="text-2xl font-bold mb-6 text-center text-gray-700">Booking Rental PlayStation</h2>
-        
+    <div class="flex justify-center items-center p-6 mt-8">
+      <div class="w-full max-w-xl bg-white text-gray-800 p-6 rounded-xl shadow-lg">
+        <h2 class="text-2xl font-bold text-center mb-6">Booking Rental PlayStation</h2>
+
         <form @submit.prevent="submit" class="space-y-6">
-          <div class="form-group">
-            <label class="block font-medium mb-2 text-gray-700">Pilih Tanggal:</label>
-            <DatePicker v-model="form.date" :model-config="{ type: 'string', mask: 'YYYY-MM-DD' }" />
-            <p v-if="isWeekend" class="mt-1 text-gray-500 text-sm">
-              *Biaya tambahan weekend Rp 50.000
-            </p>
+          <!-- Tanggal -->
+          <div>
+            <label class="block font-semibold mb-2">Pilih Tanggal:</label>
+            <DatePicker
+              v-model="form.date"
+              :model-config="{ type: 'string', mask: 'YYYY-MM-DD' }"
+              is-required
+              class="w-full"
+            />
+            <p v-if="isWeekend" class="text-sm text-gray-500 mt-1">*Biaya tambahan weekend Rp 50.000</p>
           </div>
-          
-          <div class="form-group">
-            <label class="block font-medium mb-2 text-gray-700">Pilih Konsol:</label>
-            <select
-              v-model="form.service"
-              class="w-full p-3 border rounded-lg bg-white text-gray-700 border-gray-300 focus:ring focus:ring-blue-200 focus:border-blue-500"
-            >
-              <option value="ps4">PlayStation 4 - Rp 30.000/sesi</option>
-              <option value="ps5">PlayStation 5 - Rp 40.000/sesi</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label class="block font-medium mb-2 text-gray-700">Jumlah Sesi:</label>
+
+          <!-- Jam Mulai -->
+          <div>
+            <label class="block font-semibold mb-2">Jam Mulai:</label>
             <input
-              type="number"
-              v-model.number="form.session"
-              min="1"
-              class="w-full p-3 border rounded-lg bg-white text-gray-700 border-gray-300 focus:ring focus:ring-blue-200 focus:border-blue-500"
+              type="time"
+              v-model="form.start_time"
+              class="w-full p-3 border rounded-lg border-gray-300"
+              required
             />
           </div>
-          
-          <div class="mt-6 p-4 bg-gray-100 rounded-lg transition-colors duration-200">
-            <div class="flex justify-between text-sm text-gray-700 mb-2" v-if="form.date">
-              <span>Harga {{ form.service.toUpperCase() }}:</span>
-              <span>Rp {{ basePrice.toLocaleString() }} × {{ form.session }}</span>
+
+          <!-- Konsol -->
+          <div>
+            <label class="block font-semibold mb-2">Pilih Konsol:</label>
+            <select
+              v-model.number="form.service_id"
+              class="w-full p-3 border rounded-lg border-gray-300"
+              required
+            >
+              <option
+                v-for="service in props.services"
+                :key="service.id"
+                :value="service.id"
+              >
+                {{ service.name.toUpperCase() }} - Rp {{ service.price.toLocaleString() }}/sesi
+              </option>
+            </select>
+          </div>
+
+          <!-- Jumlah sesi -->
+          <div>
+            <label class="block font-semibold mb-2">Jumlah Sesi (1 Sesi/1 Jam):</label>
+            <input
+              type="number"
+              min="1"
+              v-model.number="form.session"
+              class="w-full p-3 border rounded-lg border-gray-300"
+              required
+            />
+          </div>
+
+          <!-- Jumlah unit -->
+          <div>
+            <label class="block font-semibold mb-2">Jumlah Unit (Konsol):</label>
+            <input
+              type="number"
+              min="1"
+              v-model.number="form.units"
+              class="w-full p-3 border rounded-lg border-gray-300"
+              required
+            />
+          </div>
+
+          <!-- Rincian harga -->
+          <div class="mt-6 p-4 bg-gray-100 rounded-lg text-sm">
+            <div class="flex justify-between mb-2">
+              <span>Harga dasar:</span>
+              <span>Rp {{ basePrice.toLocaleString() }} × {{ form.session }} × {{ form.units }}</span>
             </div>
-            <div class="flex justify-between text-sm text-gray-700 mb-2" v-if="isWeekend">
+            <div v-if="isWeekend" class="flex justify-between mb-2">
               <span>Biaya Weekend:</span>
               <span>Rp {{ surcharge.toLocaleString() }}</span>
             </div>
-            <div class="flex justify-between font-bold text-lg text-gray-800 pt-2 border-t border-gray-300 mt-2">
+            <div class="flex justify-between font-bold text-lg border-t pt-3 mt-3">
               <span>Total:</span>
-              <span class="text-gray-800">Rp {{ totalPrice.toLocaleString() }}</span>
+              <span>Rp {{ totalPrice.toLocaleString() }}</span>
             </div>
           </div>
-          
+
+          <!-- Tombol submit -->
           <button
             type="submit"
-            class="w-full bg-gray-700 hover:bg-gray-800 text-white p-4 rounded-lg font-bold transition-colors duration-200 mt-4"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg font-bold transition"
           >
             Booking Sekarang
           </button>

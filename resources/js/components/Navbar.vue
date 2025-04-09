@@ -5,6 +5,9 @@ import { computed } from 'vue';
 
 const page = usePage();
 const isAuthenticated = computed(() => page.props.auth?.user);
+const isAdminOrSuperadmin = computed(() => {
+  return isAuthenticated.value && isAuthenticated.value.roles.some(role => ['admin', 'superadmin'].includes(role.name));
+});
 </script>
 
 <template>
@@ -24,6 +27,13 @@ const isAuthenticated = computed(() => page.props.auth?.user);
             class="px-3 py-1 md:px-4 md:py-2 bg-gray-700 rounded-lg text-white font-semibold hover:bg-gray-800 transition text-sm md:text-base"
           >
             List Booking
+          </Link>
+          <Link
+            v-if="isAdminOrSuperadmin"
+            href="/dashboard"
+            class="px-3 py-1 md:px-4 md:py-2 bg-gray-700 rounded-lg text-white font-semibold hover:bg-gray-800 transition text-sm md:text-base"
+          >
+            Dashboard
           </Link>
 
           <Link
