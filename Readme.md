@@ -96,8 +96,10 @@ Pastikan Anda telah menginstal perangkat lunak berikut:
 ## Fitur Utama
 
 - Autentikasi pengguna
-- CRUD Booking
+- CRUD booking, user, role, service, booking, review
 - Integrasi midtrans
+- Import/export excel dengan dynamic model dan field.
+- Audit
 
 ## User Admin
 
